@@ -5,7 +5,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const uuid = require('uuid/v4');
 const { NODE_ENV } = require('./config');
-const { bookmarks } = require('./store');
+// const { bookmarks } = require('./store');
+const bookmarks = require('./bookmarks-service');
 
 const app = express();
 const router = express.Router();
@@ -44,7 +45,14 @@ app.use(function errorHandler(error, req, res, next) {
 
 router.route('/bookmarks')
   .get((req, res) => {
-    res.json(bookmarks);
+
+    const db = req.app.get('db');
+
+    return bookmarks
+      .getAllBookmarks(db)
+      .then((data => {
+        res.json(data);
+      }));
   })
   .post(express.json(), (req, res) => {
     const { title, url, description, rating } = req.body;
