@@ -1,4 +1,5 @@
 /* global supertest */
+'use strict';
 
 const knex = require('knex');
 const app = require('../src/app');
@@ -27,7 +28,6 @@ describe('GET /bookmarks', () => {
 
   beforeEach('empty,populate table', () => {
     return db('bookmarks').truncate().then(() => {
-
       return db('bookmarks').insert(seedData);
     });
   });
@@ -83,31 +83,121 @@ describe('POST /bookmarks', () => {
 });
 
 describe('GET /bookmarks/:id', () => {
-
-  beforeEach('xxxxx', () => {
-    // do something
+  const seedData = [{
+    id: 1,
+    title: 'Alpha',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 1
+  },
+  {
+    id: 2,
+    title: 'Bravo',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 2
+  },
+  {
+    id: 3,
+    title: 'Charlie',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 3
+  },
+  {
+    id: 4,
+    title: 'Delta',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 4
+  },
+  {
+    id: 5,
+    title: 'Echo',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 5
+  },
+  ];
+  beforeEach('empty,populate table', () => {
+    return db('bookmarks').truncate().then(() => {
+      return db('bookmarks').insert(seedData);
+    });
   });
 
-  afterEach('ttttttt', () => {
-    // cleanup
+  afterEach('empty', () => {
+    return db('bookmarks').truncate();
   });
 
-  it('yyyyyy', () => {
-    // do stuff
+  it('gets a bookmark by id', () => {
+    return supertest(app)
+      .get('/bookmarks/4')
+      .set('Authorization', `Bearer ${process.env.API_KEY}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .then((resp) => {
+        expect(resp.body[0]).to.deep.equal(seedData[3]);
+      });
   });
 });
 
-describe('GET /bookmarks/:id', () => {
+describe('DELETE /bookmarks/:id', () => {
 
-  beforeEach('xxxxx', () => {
-    // do something
+  const seedData = [{
+    id: 1,
+    title: 'Alpha',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 1
+  },
+  {
+    id: 2,
+    title: 'Bravo',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 2
+  },
+  {
+    id: 3,
+    title: 'Charlie',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 3
+  },
+  {
+    id: 4,
+    title: 'Delta',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 4
+  },
+  {
+    id: 5,
+    title: 'Echo',
+    url: 'http://example.com',
+    description: 'a description',
+    rating: 5
+  },
+  ];
+  beforeEach('empty,populate table', () => {
+    return db('bookmarks').truncate().then(() => {
+      return db('bookmarks').insert(seedData);
+    });
   });
 
-  afterEach('ttttttt', () => {
-    // cleanup
+  afterEach('empty', () => {
+    return db('bookmarks').truncate();
   });
 
-  it('yyyyyy', () => {
-    // do stuff
+  it('deletes an item by its id', () => {
+    it('gets a bookmark by id', () => {
+      return supertest(app)
+        .delete('/bookmarks/4')
+        .set('Authorization', `Bearer ${process.env.API_KEY}`)
+        .expect(200)
+        .then((resp) => {
+          expect(resp.body).to.be.deep.equal([]);
+        });
+    });
   });
 });
