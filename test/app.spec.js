@@ -52,16 +52,33 @@ describe('GET /bookmarks', () => {
 
 describe('POST /bookmarks', () => {
 
-  beforeEach('xxxxx', () => {
-    // do something
+  beforeEach('empty table', () => {
+    return db('bookmarks').truncate();
   });
 
-  afterEach('ttttttt', () => {
-    // cleanup
+  afterEach('empty', () => {
+    return db('bookmarks').truncate();
   });
 
-  it('yyyyyy', () => {
-    // do stuff
+  it('Create a new bookmark', () => {
+
+    const newItem = {
+      id: 1,
+      title: 'New Bookmark',
+      url: 'http://example.com',
+      description: 'A new bookmark',
+      rating: 5,
+    };
+
+    return db('bookmarks').insert(newItem).returning('id').then((result) => {
+
+      expect(result[0]).to.equal(1);
+
+      return db.select('*').from('bookmarks').where('id', 1).then((r) => {
+
+        expect(r[0]).to.deep.equal(newItem);
+      });
+    });
   });
 });
 
