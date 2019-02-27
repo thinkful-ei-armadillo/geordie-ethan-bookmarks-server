@@ -76,24 +76,29 @@ router.route('/bookmarks')
 
 router.route('/bookmarks/:id')
   .get((req, res) => {
-    let bookmark = bookmarks.find(b => b.id === req.params.id);
+    const db = req.app.get('db');
 
-    if(bookmark) {
-      res.json(bookmark);
-    } else {
-      res.status(404).send('Bookmark not found');
-    }
+    return bookmarks.getBookmark(db, req.params.id).then(resjson => {
+      if (resjson.length > 0) {
+        res.json(resjson);
+      }
+      else{
+        res.status(404).end();
+      }
+    });
+    
   })
   .delete((req, res) => {
-    let index = bookmarks.findIndex(b => b.id === req.params.id);
+    const db = req.app.get('db');
 
-    if(index !== -1) {
-      bookmarks.splice(index, 1);
-
-      res.status(204).end();
-    } else {
-      res.status(404).send('Bookmark not found');
-    }
+    return bookmarks.deleteBookmark(db, req.params.id).then(resjson => {
+      console.log(resjson);
+      if (resjson === 1) {
+        res.status(204).end();
+      } else {
+        res.status(404).end();
+      }
+    });
   });
 
 module.exports = app;
