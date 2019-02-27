@@ -20,10 +20,14 @@ const morganOption = (NODE_ENV === 'production')
 app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
-app.use(router);
 
 app.use(function handleToken(req, res, next) {
-  let authToken = req.get('Authorization').split(' ')[1];
+
+  let authToken;
+  if (req.get('Authorization')) {
+    authToken = req.get('Authorization').split(' ')[1];
+  }
+
   let apiKey = process.env.API_KEY;
 
   if(authToken !== apiKey) {
@@ -44,6 +48,7 @@ app.use(function errorHandler(error, req, res, next) {
   res.status(500).json(response);
 });
 
+app.use(router);
 
 router.route('/bookmarks')
   .get((req, res) => {
@@ -86,7 +91,7 @@ router.route('/bookmarks/:id')
         res.status(404).end();
       }
     });
-    
+
   })
   .delete((req, res) => {
     const db = req.app.get('db');
