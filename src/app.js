@@ -1,3 +1,5 @@
+'use strict';
+
 require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
@@ -58,16 +60,18 @@ router.route('/bookmarks')
     const { title, url, description, rating } = req.body;
 
     const bookmark = {
-      id: uuid(),
       title,
       url,
       description,
       rating
     };
 
-    bookmarks.push(bookmark);
+    const db = req.app.get('db');
 
-    res.status(204).location(`http://localhost:8000/bookmarks/${bookmark.id}`).end();
+    bookmarks.createBookmark(db, bookmark).then(resjson => {
+      console.log(resjson);
+      res.status(204).location(`http://localhost:8000/bookmarks/${resjson[0]}`).end();
+    });
   });
 
 router.route('/bookmarks/:id')

@@ -1,4 +1,4 @@
-
+'use strict';
 const getAllBookmarks = function (db) {
 
   return db.select('*').from('bookmarks').orderBy('id');
@@ -11,7 +11,7 @@ const getBookmark = function (db, id) {
 
 const createBookmark = function (db, data) {
 
-  return db('bookmarks').insert(data);
+  return db('bookmarks').insert(data).returning('id');
 };
 
 const updateBookmark = function (db, id, data) {
