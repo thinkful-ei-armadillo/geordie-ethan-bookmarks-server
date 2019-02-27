@@ -9,6 +9,7 @@ const uuid = require('uuid/v4');
 const { NODE_ENV } = require('./config');
 // const { bookmarks } = require('./store');
 const bookmarks = require('./bookmarks-service');
+const xss = require('xss');
 
 const app = express();
 const router = express.Router();
@@ -20,6 +21,16 @@ const morganOption = (NODE_ENV === 'production')
 app.use(morgan(morganOption));
 app.use(helmet());
 app.use(cors());
+
+function sanitize (bookmark) {
+  return ({
+    id: bookmark.id,
+    title: xss(bookmark.title), // sanitize title
+    description: xss(bookmark.description), // sanitize description
+    url: xss(bookmark.url),
+    rating: bookmark.rating,
+  });
+}
 
 app.use(function handleToken(req, res, next) {
 
@@ -58,7 +69,7 @@ router.route('/bookmarks')
     return bookmarks
       .getAllBookmarks(db)
       .then((data => {
-        res.json(data);
+        res.json(sanitize(data));
       }));
   })
   .post(express.json(), (req, res) => {
@@ -74,7 +85,6 @@ router.route('/bookmarks')
     const db = req.app.get('db');
 
     bookmarks.createBookmark(db, bookmark).then(resjson => {
-      console.log(resjson);
       res.status(204).location(`http://localhost:8000/bookmarks/${resjson[0]}`).end();
     });
   });
@@ -85,7 +95,7 @@ router.route('/bookmarks/:id')
 
     return bookmarks.getBookmark(db, req.params.id).then(resjson => {
       if (resjson.length > 0) {
-        res.json(resjson);
+        res.json(sanitize(resjson));
       }
       else{
         res.status(404).end();
