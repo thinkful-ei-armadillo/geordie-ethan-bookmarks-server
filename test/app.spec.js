@@ -2,6 +2,7 @@
 'use strict';
 
 const knex = require('knex');
+const xss  = require('xss');
 const app = require('../src/app');
 const SETTINGS = require('../src/config');
 
@@ -139,31 +140,6 @@ describe('GET /bookmarks/:id', () => {
         expect(resp.body[0]).to.deep.equal(seedData[3]);
       });
   });
-
-  context('Given an XSS attack article', () => {
-    const maliciousBookmark = {
-      id: 911,
-      title: 'Naughty naughty very naughty <script>alert("xss");</script>',
-      url: 'https://url.to.file.which/does-not.exist',
-      description: 'bad!',
-      rating: 1,
-    };
-    beforeEach('insert malicious article', () => {
-      return db
-        .into('blogful_articles')
-        .insert([maliciousBookmark]);
-    });
-    it('removes XSS attack content', () => {
-      return supertest(app)
-        .get(`/articles/${maliciousBookmark.id}`)
-        .expect(200)
-        .expect(res => {
-          expect(res.body.title).to.eql('Naughty naughty very naughty &lt;script&gt;alert(\"xss\");&lt;/script&gt;');
-          expect(res.body.description).to.eql('bad!');
-        });
-    });
-  });
-
 });
 
 describe('DELETE /bookmarks/:id', () => {
@@ -224,5 +200,55 @@ describe('DELETE /bookmarks/:id', () => {
           expect(resp.body).to.be.deep.equal([]);
         });
     });
+  });
+});
+
+describe('XSS', () => {
+
+  const maliciousBookmark = {
+    id: 911,
+    title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+    url: 'https://url.to.file.which/does-not.exist',
+    description: 'bad!',
+    rating: 1,
+  };
+
+  before('add malicious item', () => {
+
+    return db('bookmarks').insert(maliciousBookmark);
+  });
+
+  after('empty table', () => {
+
+    return db('bookmarks').truncate();
+  });
+
+
+  it('GET /bookmarks should sanitize response', () => {
+
+    return supertest(app)
+      .get('/bookmarks')
+      .set('Authorization', `Bearer ${process.env.API_KEY}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .then((resp) => {
+
+        expect(resp.body[0].title).to.equal(xss(maliciousBookmark.title));
+        expect(resp.body[0].description).to.equal(xss(maliciousBookmark.description));
+      });
+  });
+
+  it('GET /bookmarks/:id should sanitize response', () => {
+
+    return supertest(app)
+      .get(`/bookmarks/${maliciousBookmark.id}`)
+      .set('Authorization', `Bearer ${process.env.API_KEY}`)
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .then((resp) => {
+
+        expect(resp.body[0].title).to.equal(xss(maliciousBookmark.title));
+        expect(resp.body[0].description).to.equal(xss(maliciousBookmark.description));
+      });
   });
 });

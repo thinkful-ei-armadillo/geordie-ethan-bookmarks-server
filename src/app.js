@@ -23,13 +23,13 @@ app.use(helmet());
 app.use(cors());
 
 function sanitize (bookmark) {
-  return ({
-    id: bookmark.id,
-    title: xss(bookmark.title), // sanitize title
-    description: xss(bookmark.description), // sanitize description
-    url: xss(bookmark.url),
-    rating: bookmark.rating,
-  });
+  return {
+    id          : bookmark.id,
+    title       : xss(bookmark.title),
+    description : xss(bookmark.description),
+    url         : xss(bookmark.url),
+    rating      : bookmark.rating,
+  };
 }
 
 app.use(function handleToken(req, res, next) {
@@ -69,7 +69,7 @@ router.route('/bookmarks')
     return bookmarks
       .getAllBookmarks(db)
       .then((data => {
-        res.json(sanitize(data));
+        res.json(data.map(sanitize));
       }));
   })
   .post(express.json(), (req, res) => {
@@ -95,7 +95,7 @@ router.route('/bookmarks/:id')
 
     return bookmarks.getBookmark(db, req.params.id).then(resjson => {
       if (resjson.length > 0) {
-        res.json(sanitize(resjson));
+        res.json(resjson.map(sanitize));
       }
       else{
         res.status(404).end();
